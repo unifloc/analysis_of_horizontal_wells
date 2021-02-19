@@ -29,7 +29,7 @@ class ModelGenerator:
                  permy=100, permz=10, prod_names=None, prod_xs=None, prod_ys=None, prod_z1s=None, prod_z2s=None, prod_q_oil=None,
                  inj_names=None, inj_xs=None, inj_ys=None, inj_z1s=None, inj_z2s=None, inj_bhp=None, skin=None, oil_den=860, wat_den=1010, gas_den=0.9,
                  p_depth=2500, p_init=250, o_w_contact=2600, pc_woc=0, g_o_contact=2450, pc_goc=0, tops_depth=2500, rock_compr=1.5E-005,
-                 rezim='ORAT', prod_bhp=None, horizontal=[False], y_stop=None, only_prod=False,
+                 rezim='ORAT', prod_bhp=None, horizontal=False, y_stop=None, only_prod=False,
                  lgr=False, lx=None, ly=None, cells_cy=None, cells_v=None, cells_cx=None,
                  upr_rezim_water=False, upr_rezim_gas=False, rw=None, template=1, neogr=False):
         # продолжительность расчета
@@ -41,25 +41,45 @@ class ModelGenerator:
         self.dx = f'{nx*ny*nz}*{dx} /'
         self.dy = f'{nx*ny*nz}*{dy} /'
         self.dz = f'{nx*ny*nz}*{dz}'
+        self.top_box = ''
+        if template == 2:
+            self.top_box = 'BOX \n'
+            self.top_box += '4* 1 1 /'
         self.tops_depth = f'{nx*ny}*{tops_depth} '
 
         # LGR
         if lgr == True:
-            # формируем измельченную сетку по x
-            dx_lgr = self.setcas(nx, lx, cells_cx, cells_v)
-            self.dx = str(dx_lgr[0]) + ' \n'
-            for i in range(2, nx + 1):    
-                self.dx += str(dx_lgr[i-1]) + ' \n'
-            self.dx = self.dx*ny
-            self.dx += '/\n'
+            if template == 1:
+                # формируем измельченную сетку по x
+                dx_lgr = self.setcas(nx, lx, cells_cx, cells_v)
+                self.dx = str(dx_lgr[0]) + ' \n'
+                for i in range(2, nx + 1):    
+                    self.dx += str(dx_lgr[i-1]) + ' \n'
+                self.dx = self.dx*ny
+                self.dx += '/\n'
 
-            # формируем измельченную сетку по y
-            dy_lgr = self.setcas(ny, ly, cells_cy, cells_v)
-            self.dy = ''
-            for i in range(1, ny + 1):    
-                dim = str(dy_lgr[i-1]) + ' \n'
-                self.dy += dim*nx
-            self.dy += '/\n'
+                # формируем измельченную сетку по y
+                dy_lgr = self.setcas(ny, ly, cells_cy, cells_v)
+                self.dy = ''
+                for i in range(1, ny + 1):    
+                    dim = str(dy_lgr[i-1]) + ' \n'
+                    self.dy += dim*nx
+                self.dy += '/\n'
+            elif template == 2:
+                # формируем измельченную сетку по x
+                dx_lgr = self.setcas(nx, lx, cells_cx, cells_v)
+                self.dx = 'DX ' + str(dx_lgr[0]) + ' 1 1 /\n'
+                for i in range(2, nx + 1):    
+                    self.dx += 'DX ' + str(dx_lgr[i-1]) + f' {i} {i} /\n'
+                self.dx += '/\n'
+
+                # формируем измельченную сетку по y
+                dy_lgr = self.setcas(ny, ly, cells_cy, cells_v)
+                self.dy = ''
+                for i in range(1, ny + 1):    
+                    dim = 'DY ' + str(dy_lgr[i-1]) + f' {i} {i} \n'
+                    self.dy += dim*nx
+                self.dy += '/\n'
 
         # физические свойства
         self.por = f'{nx*ny*nz}*{por}'
@@ -83,6 +103,10 @@ class ModelGenerator:
         self.neogr = neogr
 
         # умножение порового объема (неограниченный пласт)
+        self.poro_box = ''
+        if template == 2: 
+            self.poro_box = 'BOX \n'
+            self.poro_box += '6* /'
         self.por = ''
         if self.upr_rezim_water and self.upr_rezim_gas and not self.neogr:
             self.por = str(nx*ny) + '*100' + ' ' + str(nx*ny*(nz-2)) + '*' + str(por) + ' ' + str(nx*ny) + '*100' +  ' /'
@@ -96,44 +120,44 @@ class ModelGenerator:
                     val=por
                 else:
                     val=1000
-                self.por += str(nx+1) + '*' + str(1000) + ' '
+                self.por += str(nx+1) + '*' + str(1000) + ' \n'
                 for i in range(0, ny-3):
-                    self.por += str(nx-2) + '*' + str(val) + ' '
-                    self.por += str(2) + '*' + str(1000) + ' '
-                self.por += str(nx-2) + '*' + str(val) + ' '
-                self.por += str(nx+1) + '*' + str(1000) + ' '
+                    self.por += str(nx-2) + '*' + str(val) + ' \n'
+                    self.por += str(2) + '*' + str(1000) + ' \n'
+                self.por += str(nx-2) + '*' + str(val) + ' \n'
+                self.por += str(nx+1) + '*' + str(1000) + ' \n'
         elif self.neogr and self.upr_rezim_water and not self.upr_rezim_gas:
             for j in range(0, nz):
                 if j == nz-1: 
                     val=por
                 else:
                     val=1000
-                self.por += str(nx+1) + '*' + str(1000) + ' '
+                self.por += str(nx+1) + '*' + str(1000) + ' \n'
                 for i in range(0, ny-3):
-                    self.por += str(nx-2) + '*' + str(val) + ' '
-                    self.por += str(2) + '*' + str(1000) + ' '
-                self.por += str(nx-2) + '*' + str(val) + ' '
-                self.por += str(nx+1) + '*' + str(1000) + ' '
+                    self.por += str(nx-2) + '*' + str(val) + ' \n'
+                    self.por += str(2) + '*' + str(1000) + ' \n'
+                self.por += str(nx-2) + '*' + str(val) + ' \n'
+                self.por += str(nx+1) + '*' + str(1000) + ' \n'
         elif self.neogr and not self.upr_rezim_water and self.upr_rezim_gas:
             for j in range(0, nz):
                 if j == 0: 
                     val=por
                 else:
                     val=1000
-                self.por += str(nx+1) + '*' + str(1000) + ' '
+                self.por += str(nx+1) + '*' + str(1000) + ' \n'
                 for i in range(0, ny-3):
-                    self.por += str(nx-2) + '*' + str(val) + ' '
-                    self.por += str(2) + '*' + str(1000) + ' '
-                self.por += str(nx-2) + '*' + str(val) + ' '
-                self.por += str(nx+1) + '*' + str(1000) + ' '
+                    self.por += str(nx-2) + '*' + str(val) + ' \n'
+                    self.por += str(2) + '*' + str(1000) + ' \n'
+                self.por += str(nx-2) + '*' + str(val) + ' \n'
+                self.por += str(nx+1) + '*' + str(1000) + ' \n'
         elif self.neogr and not self.upr_rezim_water and not self.upr_rezim_gas:
             for j in range(0, nz):
-                self.por += str(nx+1) + '*' + str(1000) + ' '
+                self.por += str(nx+1) + '*' + str(1000) + ' \n'
                 for i in range(0, ny-3):
-                    self.por += str(nx-2) + '*' + str(por) + ' '
-                    self.por += str(2) + '*' + str(1000) + ' '
-                self.por += str(nx-2) + '*' + str(por) + ' '
-                self.por += str(nx+1) + '*' + str(1000) + ' '
+                    self.por += str(nx-2) + '*' + str(por) + ' \n'
+                    self.por += str(2) + '*' + str(1000) + ' \n'
+                self.por += str(nx-2) + '*' + str(por) + ' \n'
+                self.por += str(nx+1) + '*' + str(1000) + ' \n'
         elif not self.neogr and not self.upr_rezim_water and not self.upr_rezim_gas:
             self.por += str(nx*ny*nz) + '*' + str(por) +  ' /'
 
@@ -193,12 +217,11 @@ class ModelGenerator:
         self.grid_dy = ny
      
     def create_data_file(self):
-        if self.template == 1:
-            template_name = 'templates/opm.DATA'
+        template_name = 'templates/opm.DATA'
         env = Environment(loader=FileSystemLoader(''))
         template = env.get_template(template_name)
         self.result_data = template.render(DIMENS=self.dimens, START=self.start_date,
-            DX=self.dx, DY=self.dy, DZ=self.dz, TOPS=self.tops_depth, PORO=self.por,
+            DX=self.dx, DY=self.dy, DZ=self.dz, TOP_BOX=self.top_box, TOPS=self.tops_depth, PORO_BOX=self.poro_box, PORO=self.por,
             PERMX=self.permx, PERMY=self.permy, PERMZ=self.permz, ROCK=self.rock,  DENSITY=self.density,
             EQUIL=self.equil, WELSPECS=self.welspecs, COMPDAT=self.compdat,
             WCONPROD=self.wconprod, WCONINJE=self.wconinje, TSTEP=self.tstep)
@@ -206,9 +229,10 @@ class ModelGenerator:
 
     def create_model(self, name, result_name, keys):
         self.save_file(name=name)
-        self.calculate_file(name)
-        self.create_result(name=name, keys=keys)
-        self.read_result(name=result_name)
+        if self.template == 1:
+            self.calculate_file(name)
+            self.create_result(name=name, keys=keys)
+            self.read_result(name=result_name)
 
 
     def save_file(self, name):
@@ -256,14 +280,16 @@ class ModelGenerator:
         self.fig = go.Figure()
         files = [f for f in os.listdir(directory)]
         files.sort(key=lambda x:int(x.split('.')[1]))
+        i = 0
         for file in files:
             df = pd.read_csv('csv_folder/%s' % file, parse_dates=[0], index_col=[0])
-            i = int(file.split('.')[1])
+            # i = int(file.split('.')[1])
             self.fig.add_trace(go.Scatter(
                     x=df.index,
                     y=df[parameters[0]],
                     mode=mode,
                     name='Модель:' + name[i]))
+            i += 1
         if x_axis is None:
             x_axis = 'Дата'
         if y_axis is None:
