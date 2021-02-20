@@ -41,10 +41,13 @@ class ModelGenerator:
         self.dx = f'{nx*ny*nz}*{dx} /'
         self.dy = f'{nx*ny*nz}*{dy} /'
         self.dz = f'{nx*ny*nz}*{dz}'
+        if template == 2: 
+            self.dz = f'DZ {dz} / \n'
+            self.dz += '/'
         self.top_box = ''
         if template == 2:
             self.top_box = 'BOX \n'
-            self.top_box += '4* 1 1 /'
+            self.top_box += f'1 {nx} 1 {ny} 1 1 /'
         self.tops_depth = f'{nx*ny}*{tops_depth} '
 
         # LGR
@@ -77,15 +80,20 @@ class ModelGenerator:
                 dy_lgr = self.setcas(ny, ly, cells_cy, cells_v)
                 self.dy = ''
                 for i in range(1, ny + 1):    
-                    dim = 'DY ' + str(dy_lgr[i-1]) + f' {i} {i} \n'
-                    self.dy += dim*nx
+                    self.dy += 'DY ' + str(dy_lgr[i-1]) + f' 2* {i} {i} /\n'
                 self.dy += '/\n'
 
         # физические свойства
         self.por = f'{nx*ny*nz}*{por}'
-        self.permx = f'{nx*ny*nz}*{permx}'
-        self.permy = f'{nx*ny*nz}*{permy}'
-        self.permz = f'{nx*ny*nz}*{permz}'
+        if template == 1:
+            self.permx = f'{nx*ny*nz}*{permx}'
+            self.permy = f'{nx*ny*nz}*{permy}'
+            self.permz = f'{nx*ny*nz}*{permz}'
+        elif template == 2:
+            self.permx = f'PERMX {permx} 6*/ \n'
+            self.permy = f'PERMY {permy} 6*/ \n'
+            self.permz = f'PERMZ {permz} 6*/ \n'
+
 
         # EQUILIBRIUM DATA
         self.equil = f'{p_depth} {p_init} {o_w_contact} {pc_woc} {g_o_contact} {pc_goc} 1 1* 1*  /'
@@ -106,7 +114,7 @@ class ModelGenerator:
         self.poro_box = ''
         if template == 2: 
             self.poro_box = 'BOX \n'
-            self.poro_box += '6* /'
+            self.poro_box += f'1 {nx} 1 {ny} 1 {nz} /'
         self.por = ''
         if self.upr_rezim_water and self.upr_rezim_gas and not self.neogr:
             self.por = str(nx*ny) + '*100' + ' ' + str(nx*ny*(nz-2)) + '*' + str(por) + ' ' + str(nx*ny) + '*100' +  ' /'
@@ -182,23 +190,27 @@ class ModelGenerator:
 
         for name, x, y, fluid in zip(all_well_names, all_well_xs,
                                              all_well_ys, all_well_fluid):
-            self.welspecs += name + ' G1 ' + str(x) + ' ' + str(y) + ' * ' + fluid + ' /'
+            if template == 2: name = f'"{name}"'
+            self.welspecs += name + ' G1 ' + str(x) + ' ' + str(y) + ' 1* ' + fluid + ' /'
 
         for name, x, y, z1, z2, skin, rw in zip(all_well_names, all_well_xs, all_well_ys,
                                               all_well_z1s, all_well_z2s, skin, rw):
+            if template == 2: name = f'"{name}"'
             if horizontal:
-                self.compdat = name + ' ' + str(x) + ' ' + str(y) + ' ' + str(z2) + ' ' + str(z2) + ' OPEN	1*	1* ' + str(rw) +  ' 1* ' + str(skin) + ' 1* Y /\n' 
+                self.compdat = name + ' ' + str(x) + ' ' + str(y) + ' ' + str(z2) + ' ' + str(z2) + ' OPEN	1*	1* ' + str(rw) +  ' 1* ' + str(skin) + ' 1* X /\n' 
                 for i in range(y+1, y_stop[0]+1):
-                    self.compdat += name + ' ' + str(x) + ' ' + str(i) + ' ' + str(z2) + ' ' + str(z2) + ' OPEN	1*	1* ' + str(rw) +  ' 1* ' + str(skin) + ' 1* Y /\n'
+                    self.compdat += name + ' ' + str(x) + ' ' + str(i) + ' ' + str(z2) + ' ' + str(z2) + ' OPEN	1*	1* ' + str(rw) +  ' 1* ' + str(skin) + ' 1* X /\n'
             else:
                 self.compdat = name + ' ' + str(x) + ' ' + str(y) + ' ' + str(z1) + ' ' + str(z2) + ' OPEN	1*	1*	' + str(rw) +  ' 1* ' + str(skin) + ' /'
 
         for prod, rezim, q_oil, prod_bhp in zip(prod_names, rezim, prod_q_oil, prod_bhp):
+            if template == 2: prod = f'"{prod}"'
             self.wconprod += prod + ' OPEN ' + rezim + ' ' + str(q_oil) + ' 4* ' + str(prod_bhp) + ' /'
 
         self.wconinje = ''
         if not only_prod:
             for inj, inj_bhp in zip(inj_names, inj_bhp):
+                if template == 2: inj = f'"{inj}"'
                 self.wconinje += inj + ' WAT OPEN BHP ' + str(inj_bhp) + ' 1* /'
 
         self.template = template # выбираем шаблон data файла для различных симуляторов
@@ -217,7 +229,10 @@ class ModelGenerator:
         self.grid_dy = ny
      
     def create_data_file(self):
-        template_name = 'templates/opm.DATA'
+        if self.template == 1:
+            template_name = 'templates/opm.DATA'
+        elif self.template == 2:
+            template_name = 'templates/ecl.DATA'
         env = Environment(loader=FileSystemLoader(''))
         template = env.get_template(template_name)
         self.result_data = template.render(DIMENS=self.dimens, START=self.start_date,
@@ -457,7 +472,7 @@ class ModelGenerator:
             if abs(l - lx) < delta:
                 x = []
                 for i in range(1, n + 1):
-                    x.append(round(v * k ** i, 1))
+                    x.append(round(v * k ** i)) # ,2)
                 x = x[::-1] + [v] * s + x
                 return x
 
