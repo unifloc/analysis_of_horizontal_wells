@@ -31,7 +31,8 @@ class ModelGenerator:
                  p_depth=2500, p_init=250, o_w_contact=2600, pc_woc=0, g_o_contact=2450, pc_goc=0, tops_depth=2500, rock_compr=1.5E-005,
                  rezim='ORAT', prod_bhp=None, horizontal=False, y_stop=None, only_prod=False,
                  lgr=False, lx=None, ly=None, cells_cy=None, cells_v=None, cells_cx=None,
-                 upr_rezim_water=False, upr_rezim_gas=False, rw=None, template=1, neogr=False):
+                 upr_rezim_water=False, upr_rezim_gas=False, rw=None, template=1, neogr=False,
+                 grp=False, nz_grp=1, xs_start_grp=1, xs_stop_grp=2, ys_grp=1, k_grp=100):
         # продолжительность расчета
         self.start_date = f'{start_date}'
         self.tstep = f'{mounths}*{days}'
@@ -52,7 +53,7 @@ class ModelGenerator:
 
         # LGR
         if lgr == True:
-            if template == 1:
+            if template == 1 or template == 3:
                 # формируем измельченную сетку по x
                 dx_lgr = self.setcas(nx, lx, cells_cx, cells_v)
                 self.dx = str(dx_lgr[0]) + ' \n'
@@ -85,7 +86,7 @@ class ModelGenerator:
 
         # физические свойства
         self.por = f'{nx*ny*nz}*{por}'
-        if template == 1:
+        if template == 1 or template == 3:
             self.permx = f'{nx*ny*nz}*{permx}'
             self.permy = f'{nx*ny*nz}*{permy}'
             self.permz = f'{nx*ny*nz}*{permz}'
@@ -187,13 +188,13 @@ class ModelGenerator:
         
         self.welspecs = ''
         self.wconprod = ''
-
+        self.compdat = ''
         for name, x, y, fluid in zip(all_well_names, all_well_xs,
                                              all_well_ys, all_well_fluid):
             if template == 2: name = f'"{name}"'
-            self.welspecs += name + ' G1 ' + str(x) + ' ' + str(y) + ' 1* ' + fluid + ' /'
+            self.welspecs += name + ' G1 ' + str(x) + ' ' + str(y) + ' 1* ' + fluid + ' /\n'
 
-        for name, x, y, z1, z2, skin, rw in zip(all_well_names, all_well_xs, all_well_ys,
+        for x, name, y, z1, z2, skin, rw in zip(all_well_xs, all_well_names, all_well_ys,
                                               all_well_z1s, all_well_z2s, skin, rw):
             if template == 2: name = f'"{name}"'
             if horizontal:
@@ -201,7 +202,8 @@ class ModelGenerator:
                 for i in range(y+1, y_stop[0]+1):
                     self.compdat += name + ' ' + str(x) + ' ' + str(i) + ' ' + str(z2) + ' ' + str(z2) + ' OPEN	1*	1* ' + str(rw) +  ' 1* ' + str(skin) + ' 1* X /\n'
             else:
-                self.compdat = name + ' ' + str(x) + ' ' + str(y) + ' ' + str(z1) + ' ' + str(z2) + ' OPEN	1*	1*	' + str(rw) +  ' 1* ' + str(skin) + ' /'
+                for i in range(0, len(all_well_xs)):
+                    self.compdat += name + ' ' + str(all_well_xs[i]) + ' ' + str(all_well_ys[i]) + ' ' + str(all_well_z1s[i]) + ' ' + str(all_well_z2s[i]) + ' OPEN	1*	1*	' + str(rw) +  ' 1* ' + str(skin) + ' /\n'
 
         for prod, rezim, q_oil, prod_bhp in zip(prod_names, rezim, prod_q_oil, prod_bhp):
             if template == 2: prod = f'"{prod}"'
@@ -215,6 +217,21 @@ class ModelGenerator:
 
         self.template = template # выбираем шаблон data файла для различных симуляторов
         # templates: 1-opm; 2-ecl (в разработке)
+
+        # Моделирование ГРП:
+        self.grp = grp
+        self.nz_grp = nz_grp
+        self.xs_start_grp = xs_start_grp
+        self.xs_stop_grp = xs_stop_grp
+        self.ys_grp = ys_grp
+        self.k_grp = k_grp
+
+        self.grp_word = ''
+        if grp == True:
+            self.grp_word = 'EQUALS \n'
+            self.grp_word += f"'PERMX' {k_grp} {xs_start_grp} {xs_stop_grp} {ys_grp} {ys_grp} {nz_grp} {nz_grp} /\n"
+            self.grp_word += f"'PERMY' {k_grp} {xs_start_grp} {xs_stop_grp} {ys_grp} {ys_grp} {nz_grp} {nz_grp} /\n"
+            self.grp_word += '/'
 
         # переменные для расчета
         self.result_df = None
@@ -233,18 +250,20 @@ class ModelGenerator:
             template_name = 'templates/opm.DATA'
         elif self.template == 2:
             template_name = 'templates/ecl.DATA'
+        elif self.template == 3:
+            template_name = 'templates/multphase.DATA'
         env = Environment(loader=FileSystemLoader(''))
         template = env.get_template(template_name)
         self.result_data = template.render(DIMENS=self.dimens, START=self.start_date,
             DX=self.dx, DY=self.dy, DZ=self.dz, TOP_BOX=self.top_box, TOPS=self.tops_depth, PORO_BOX=self.poro_box, PORO=self.por,
             PERMX=self.permx, PERMY=self.permy, PERMZ=self.permz, ROCK=self.rock,  DENSITY=self.density,
             EQUIL=self.equil, WELSPECS=self.welspecs, COMPDAT=self.compdat,
-            WCONPROD=self.wconprod, WCONINJE=self.wconinje, TSTEP=self.tstep)
+            WCONPROD=self.wconprod, WCONINJE=self.wconinje, TSTEP=self.tstep, GRP=self.grp_word)
 
 
     def create_model(self, name, result_name, keys):
         self.save_file(name=name)
-        if self.template == 1:
+        if self.template == 1 or self.template == 3:
             self.calculate_file(name)
             self.create_result(name=name, keys=keys)
             self.read_result(name=result_name)
@@ -472,7 +491,7 @@ class ModelGenerator:
             if abs(l - lx) < delta:
                 x = []
                 for i in range(1, n + 1):
-                    x.append(round(v * k ** i)) # ,2)
+                    x.append(round(v * k ** i, 3))
                 x = x[::-1] + [v] * s + x
                 return x
 
@@ -483,7 +502,7 @@ class ModelGenerator:
         dates = 'last'
         dframe = grid.df(eclfiles, rstdates=dates)
         df = []
-        k = 40
+        k = dx
         for i in range(0, dx):
             ra = []
             for j in range(0, dy):
@@ -493,9 +512,9 @@ class ModelGenerator:
         return df
 
 
-    def grid_plot(self, filename, parametr):
+    def grid_plot(self, filename, parametr, title=''):
         df = self.grid_df(filename, parametr, self.grid_dx, self.grid_dy)
-        self.fig = px.imshow(df, labels=dict(x="ny", y="nx"))
+        self.fig = px.imshow(df, labels=dict(x="ny", y="nx", color=title))
         iplot(self.fig)
 
 
