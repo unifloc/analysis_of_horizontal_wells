@@ -12,15 +12,16 @@ DIMENS
    {{ DIMENS }} /
 
 EQLDIMS
-/
+1 /
 
 TABDIMS
-/
+-- NoSatTabl        MaxNodesSatTab             MaxFIPReg            MaxSatEndpointsDepthTab
+--          NoPVTTab              MaxPressNodes         MaxRsRvNodes
+      1         1        100           100         1         100           /
 
 OIL
 WATER
-GAS
-DISGAS
+
 
 METRIC
 
@@ -32,7 +33,7 @@ WELLDIMS
 -- Item 2: maximum number of grid blocks connected to any one well
 -- Item 3: maximum number of groups in the model
 -- Item 4: maximum number of wells in any one group
-   1000 100000 10 100 /
+   50 1000 5 10 /
 
 UNIFOUT
 
@@ -44,54 +45,39 @@ INIT
 -- -------------------------------------------------------------------------
 NOECHO
 
-DX 
+EQUALS 
 {{ DX }}
-DY
-{{ DY }}
-DZ
-{{ DZ }} /
 
+EQUALS 
+{{ DY }}
+
+EQUALS 
+{{ DZ }} 
+
+{{ TOP_BOX }}
 
 TOPS
 {{ TOPS }} /
 
+{{ PORO_BOX }}
 
 PORO
 {{ PORO }} /
 
-PERMX
+EQUALS 
 {{ PERMX }} /
 
-PERMY
-{{ PERMX }} /
+EQUALS 
+{{ PERMY }} /
 
-PERMZ
+EQUALS 
 {{ PERMZ }} /
-
-
-{{ GRP }}
 
 
 ECHO
 
 PROPS
 -- -------------------------------------------------------------------------
-
-PVTW
--- Item 1: pressure reference 
--- Item 2: water FVF 
--- Item 3: water compressibility 
--- Item 4: water viscosity (cp)
--- Item 5: water 'viscosibility' 
-
-	250     1.024 2.9E-005      0.66        1* /
-
-
-ROCK
--- Item 1: reference pressure 
--- Item 2: rock compressibility 
-   {{ ROCK }}
-/
 
 SWOF
 -- Column 1: water saturation
@@ -117,7 +103,8 @@ SWOF
 
 
 DENSITY
- {{ DENSITY }}
+-- Oil   Water   Gas
+{{ DENSITY }}
 
 PVTO
 -- Column 1: dissolved gas-oil ratio
@@ -135,22 +122,19 @@ PVTO
                 310.5     1.726      0.605 /
 /
 
+PVTW
+-- Pref       Bw          Comp       Muw
+	250     1.024 2.9E-005      0.66    /
+
+ROCK
+-- Item 1: reference pressure 
+-- Item 2: rock compressibility 
+   {{ ROCK }}
+/
+
 SGOF
-             0           0           1           0
-         0.001           0           1           0
-          0.02           0       0.997           0
-          0.05       0.005        0.98           0
-          0.12       0.025         0.7           0
-           0.2       0.075        0.35           0
-          0.25       0.125         0.2           0
-           0.3        0.19        0.09           0
-           0.4        0.41       0.021           0
-          0.45         0.6        0.01           0
-           0.5        0.72       0.001           0
-           0.6        0.87      0.0001           0
-           0.7        0.94           0           0
-          0.85        0.98           0           0
-             1           1           0           0
+             0           0           1           0.2
+             1           1           0           0.5
 /
 
 PVDG
@@ -166,6 +150,11 @@ PVDG
    621.5395164825 0.0021672279     0.047
 /
 
+RSVD
+-- Dissolved GOR is initially constant with depth through the reservoir.
+       2499.36   72
+        2590.8   72
+/
 
 SOLUTION
 -- -------------------------------------------------------------------------
@@ -182,119 +171,143 @@ EQUIL
 -- Item 9: Set to 0 as this is the only value supported by OPM
  {{ EQUIL }}
 
-RSVD
--- Dissolved GOR is initially constant with depth through the reservoir.
-       2499.36   72
-        2590.8   72
-/
+   
+RPTSOL
+RESTART=2 FIP=2 'PRES' 'SWAT' /
+
+RPTRST
+'ALLPROPS' /
 
 SUMMARY
 -- -------------------------------------------------------------------------
-RPTONLY
-DATE
-FGPR
-FGPRF
-FGPRS
-FGPT
-FGPTF
-FGPTS
-FLPR
-FLPT
+WOPR
+/
+WOPT
+/
+WWPR
+/
+WWPT
+/
+WLPR
+/
+WLPT
+/
+WWIR
+/
+WWIT
+/
+WGPR
+/
+WGPT
+/
+WWCT
+/
+WGOR
+/
+WBHP
+/
+WBP9
+/
+WBP
+/
+WTHP
+/
+
+WOPRH
+/
+WOPTH
+/
+WWPRH
+/
+WWPTH
+/
+WLPRH
+/
+WLPTH
+/
+WWIRH
+/
+WWITH
+/
+WGPRH
+/
+WGPTH
+/
+WWCTH
+/
+WGORH
+/
+WBHPH
+/
+WTHPH
+/
+
 FOPR
-FOPRF
-FOPRS
-FOPT
-FOPTF
-FOPTS
 FWPR
-FWPT
-FGIR
-FGIT
-FOIR
-FOIT
+FLPR
 FWIR
+FGPR
+
+FOPT
+FWPT
+FLPT
 FWIT
-FVPR
-FVPT
-FVIR
-FVIT
-FGOR
-FWCT
-FGSAT
-FOSAT
-FWSAT
-FGPV
-FOPV
-FWPV
-FAQR
-FAQT
-FNQR
-FNQT
-FGIP
-FGIPG
-FGIPL
-FOIP
-FOIPG
-FOIPL
-FWIP
-FRPV
-FHPV
-FOE
-FOEW
-FOEIW
-FOEIG
-FMWIN
-FMWIP
-FMWIT
-FMWPP
-FMWPR
-FMWPT
+FGPT
+
 FPR
-FOVIS
-FRS
-RGIP
-/
-RGIPG
-/
-RGIPL
-/
-ROIP
-/
-ROIPG
-/
-ROIPL
-/
-RWIP
-/
-RHPV
-/
-RPR
-/
-RRPV
-/
-ROE
-/
-ROEIW
-/
+FWCT
+FGOR
+
+FMWPR
+FMWIN
+
+FOPRH
+FWPRH
+FLPRH
+FWIRH
+FGPRH
+
+FOPTH
+FWPTH
+FLPTH
+FWITH
+FGPTH
+
+FWCTH
+FGORH
+
 ROPR
-/
-ROPT
 /
 RWPR
 /
-RWPT
-/
 RWIR
+/
+RGPR
+/
+ROPT
+/
+RWPT
 /
 RWIT
 /
-RGSAT
+RGPT
 /
-ROSAT
+RPR
 /
-RWSAT
+ROFT
 /
-RRS
+ROFTL
+/
+ROFTG
+/
+
+GOPR
+/
+GOPT
+/
+GWPR
+/
+GWPT
 /
 GGPR
 /
@@ -304,205 +317,32 @@ GLPR
 /
 GLPT
 /
-GOPR
-/
-GOPT
-/
-GWPR
-/
-GWPT
-/
-GGIR
-/
-GGIT
-/
-GOIR
-/
-GOIT
-/
 GWIR
 /
 GWIT
 /
-GGOR
+GMWPR
 /
-GWCT
+GMWIN
 /
-WGPT
-/
-WGPTF
-/
-WLPT
-/
-WOPT
-/
-WOPTF
-/
-WOPTS
-/
-WWPT
-/
-WVPT
-/
-WGIT
-/
-WOIT
-/
-WWIT
-/
-WVIT
-/
-WEFF
-/
-WGPR
-/
-WGPRF
-/
-WLPR
-/
-WOPR
-/
-WOPRF
-/
-WOPRS
-/
-WWPR
-/
-WVPR
-/
-WGIR
-/
-WOIR
-/
-WWIR
-/
-WVIR
-/
-WGOR
-/
-WWCT
-/
-WBHP
-/
-WBP
-/
-WBP4
-/
-WBP5
-/
-WBP9
-/
-WTHP
-/
-WTHT
-/
-WAPI
-/
-CGPT
-/
-CGPTF
-/
-CLPT
 
-/
-COPT
-/
-COPTS
-/
-CVPT
-/
-CWIT
-/
-CVIT
-/
-CPR
-/
-CTFAC
-/
-FGPRH
-FGPTH
-FLPRH
-FLPTH
-FOPRH
-FOPTH
-FWPRH
-FWPTH
-FGIRH
-FGITH
-FOIRH
-FOITH
-FWIRH
-FWITH
-FGORH
-FWCTH
-GGPRH
-/
-GGPTH
-/
-GLPRH
-/
-GLPTH
-/
-GOPRH
-/
-GOPTH
-/
-GWPRH
-/
-GWPTH
-/
-GGIRH
-/
-GGITH
-/
-GOIRH
-/
-GOITH
-/
-GWIRH
-/
-GWITH
-/
-GGORH
-/
-GWCTH
-/
-WGPRH
-/
-WGPTH
-/
-WLPRH
-/
-WLPTH
-/
-WOPRH
-/
-WOPTH
-/
-WWPRH
-/
-WWPTH
-/
-WGIRH
-/
-WGITH
-/
-WOIRH
-/
-WOITH
-/
-WWIRH
-/
-WWITH
-/
-WGORH
-/
-WWCTH
-/
-WBHPH
-/
-WTHPH
-/
+FAQR
+
+DATE
+
+RUNSUM
+
+SEPARATE
+
+RPTONLY
+
+RPTSMRY
+1 /
+
+MONITOR
+
+EXCEL
+
 
 
 SCHEDULE
@@ -511,7 +351,15 @@ RPTSCHED
 	'PRES' 'SGAS' 'RS' 'WELLS' /
 
 RPTRST
-	'BASIC=1' /
+'BASIC=2' 'FREQ=1' /
+
+TUNING
+0.001 0.5 0.001 6* 1 /
+/
+1* 1* 50  1*  1* 4* /
+
+MATCORR
+/
 
 -- If no resolution (i.e. case 1). the two following lines must be added:
 DRSDT

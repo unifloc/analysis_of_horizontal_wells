@@ -42,11 +42,11 @@ class ModelGenerator:
         self.dx = f'{nx*ny*nz}*{dx} /'
         self.dy = f'{nx*ny*nz}*{dy} /'
         self.dz = f'{nx*ny*nz}*{dz}'
-        if template == 2: 
+        if template == 2 or template == 4: 
             self.dz = f'DZ {dz} / \n'
             self.dz += '/'
         self.top_box = ''
-        if template == 2:
+        if template == 2 or template == 4:
             self.top_box = 'BOX \n'
             self.top_box += f'1 {nx} 1 {ny} 1 1 /'
         self.tops_depth = f'{nx*ny}*{tops_depth} '
@@ -69,7 +69,7 @@ class ModelGenerator:
                     dim = str(dy_lgr[i-1]) + ' \n'
                     self.dy += dim*nx
                 self.dy += '/\n'
-            elif template == 2:
+            elif template == 2 or template == 4:
                 # формируем измельченную сетку по x
                 dx_lgr = self.setcas(nx, lx, cells_cx, cells_v)
                 self.dx = 'DX ' + str(dx_lgr[0]) + ' 1 1 /\n'
@@ -90,7 +90,7 @@ class ModelGenerator:
             self.permx = f'{nx*ny*nz}*{permx}'
             self.permy = f'{nx*ny*nz}*{permy}'
             self.permz = f'{nx*ny*nz}*{permz}'
-        elif template == 2:
+        elif template == 2 or template == 4:
             self.permx = f'PERMX {permx} 6*/ \n'
             self.permy = f'PERMY {permy} 6*/ \n'
             self.permz = f'PERMZ {permz} 6*/ \n'
@@ -113,7 +113,7 @@ class ModelGenerator:
 
         # умножение порового объема (неограниченный пласт)
         self.poro_box = ''
-        if template == 2: 
+        if template == 2 or template == 4: 
             self.poro_box = 'BOX \n'
             self.poro_box += f'1 {nx} 1 {ny} 1 {nz} /'
         self.por = ''
@@ -191,12 +191,12 @@ class ModelGenerator:
         self.compdat = ''
         for name, x, y, fluid in zip(all_well_names, all_well_xs,
                                              all_well_ys, all_well_fluid):
-            if template == 2: name = f'"{name}"'
+            if template == 2 or template == 4: name = f'"{name}"'
             self.welspecs += name + ' G1 ' + str(x) + ' ' + str(y) + ' 1* ' + fluid + ' /\n'
 
         for x, name, y, z1, z2, skin, rw in zip(all_well_xs, all_well_names, all_well_ys,
                                               all_well_z1s, all_well_z2s, skin, rw):
-            if template == 2: name = f'"{name}"'
+            if template == 2 or template == 4: name = f'"{name}"'
             if horizontal:
                 self.compdat = name + ' ' + str(x) + ' ' + str(y) + ' ' + str(z2) + ' ' + str(z2) + ' OPEN	1*	1* ' + str(rw) +  ' 1* ' + str(skin) + ' 1* X /\n' 
                 for i in range(y+1, y_stop[0]+1):
@@ -206,13 +206,13 @@ class ModelGenerator:
                     self.compdat += name + ' ' + str(all_well_xs[i]) + ' ' + str(all_well_ys[i]) + ' ' + str(all_well_z1s[i]) + ' ' + str(all_well_z2s[i]) + ' OPEN	1*	1*	' + str(rw) +  ' 1* ' + str(skin) + ' /\n'
 
         for prod, rezim, q_oil, prod_bhp in zip(prod_names, rezim, prod_q_oil, prod_bhp):
-            if template == 2: prod = f'"{prod}"'
+            if template == 2 or template == 4: prod = f'"{prod}"'
             self.wconprod += prod + ' OPEN ' + rezim + ' ' + str(q_oil) + ' 4* ' + str(prod_bhp) + ' /'
 
         self.wconinje = ''
         if not only_prod:
             for inj, inj_bhp in zip(inj_names, inj_bhp):
-                if template == 2: inj = f'"{inj}"'
+                if template == 2 or template == 4: inj = f'"{inj}"'
                 self.wconinje += inj + ' WAT OPEN BHP ' + str(inj_bhp) + ' 1* /'
 
         self.template = template # выбираем шаблон data файла для различных симуляторов
@@ -251,7 +251,9 @@ class ModelGenerator:
         elif self.template == 2:
             template_name = 'templates/ecl.DATA'
         elif self.template == 3:
-            template_name = 'templates/multphase.DATA'
+            template_name = 'templates/opm_multphase.DATA'
+        elif self.template == 4:
+            template_name = 'templates/ecl_multphase.DATA'
         env = Environment(loader=FileSystemLoader(''))
         template = env.get_template(template_name)
         self.result_data = template.render(DIMENS=self.dimens, START=self.start_date,
