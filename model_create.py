@@ -277,7 +277,7 @@ class ModelGenerator:
 
     @staticmethod
     def calculate_file(name):
-        os.system("flow model_folder/%s.DATA" % name)
+        os.system("mpirun flow model_folder/%s.DATA" % name)
 
     @staticmethod
     def create_result(name, keys):
