@@ -150,11 +150,6 @@ PVDG
    621.5395164825 0.0021672279     0.047
 /
 
-RSVD
--- Dissolved GOR is initially constant with depth through the reservoir.
-       2499.36   72
-        2590.8   72
-/
 
 SOLUTION
 -- -------------------------------------------------------------------------
@@ -171,6 +166,11 @@ EQUIL
 -- Item 9: Set to 0 as this is the only value supported by OPM
  {{ EQUIL }}
 
+RSVD
+-- Dissolved GOR is initially constant with depth through the reservoir.
+       2499.36   72
+        2590.8   72
+/
    
 RPTSOL
 RESTART=2 FIP=2 'PRES' 'SWAT' /
