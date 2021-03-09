@@ -84,7 +84,7 @@ PVTW
 -- Item 4: water viscosity (cp)
 -- Item 5: water 'viscosibility' 
 
-	250     1.024 2.9E-005      0.66        1* /
+	286     1.024 2.9E-005      0.66        1* /
 
 
 ROCK
@@ -136,8 +136,21 @@ PVTO
 /
 
 SGOF
-             0           0           1           0.2
-             1           1           0           0.5
+             0           0           1           0
+         0.001           0           1           0
+          0.02           0       0.997           0
+          0.05       0.005        0.98           0
+          0.12       0.025         0.7           0
+           0.2       0.075        0.35           0
+          0.25       0.125         0.2           0
+           0.3        0.19        0.09           0
+           0.4        0.41       0.021           0
+          0.45         0.6        0.01           0
+           0.5        0.72       0.001           0
+           0.6        0.87      0.0001           0
+           0.7        0.94           0           0
+          0.85        0.98           0           0
+             1           1           0           0
 /
 
 PVDG
@@ -500,11 +513,6 @@ RPTSCHED
 RPTRST
 	'BASIC=1' /
 
--- If no resolution (i.e. case 1). the two following lines must be added:
-DRSDT
- 0.08 ALL /
--- if DRSDT is set to 0, GOR cannot rise and free gas does not
--- dissolve in undersaturated oil -> constant bubble point pressure
 
 WELSPECS
 -- Item #: 1	 2	3	4	5	 6
