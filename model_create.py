@@ -234,11 +234,11 @@ class ModelGenerator:
         self.welsegs = ''
         self.compsegs = ''
         if roughness:
-            for name in zip(all_well_names):
+            for name in all_well_names:
                 self.welsegs += f'"{name}" {tops_depth+z2} 0.0 1* INC HF- /\n'
                 self.welsegs += f'2 {y_stop[0]}  1 1 {y_stop[0]+all_well_z2s[0]} 0 {rw*2} {roughness} /\n'
                 self.compsegs += f'"{name}" /\n'
-                self.compsegs +=  f' {all_well_xs[0]} {all_well_ys[0]} {all_well_z2s[0]} 1 1 1* Y {all_well_ys[-1]} /\n'
+                self.compsegs +=  f' {all_well_xs[0]} {all_well_ys[0]} {all_well_z2s[0]} 1 1 1* Y {y_stop[0]} /\n'
 
         # переменные для расчета
         self.result_df = None
@@ -359,14 +359,14 @@ class ModelGenerator:
             npv_list.append(npv_)
             model_list.append(f'Модель: {name[i]}')
         colors = ['lightslategray',] * 10
-        #colors[6] = 'crimson'
+        colors[3] = 'crimson'
         data = [go.Bar(
             x = model_list,
             y = npv_list,
             marker_color=colors)]
         self.fig_npv = go.Figure(data=data)
         self.fig_npv.update_layout(title='NPV по моделям')
-        self.fig_npv.update_yaxes(type="log")
+        #self.fig_npv.update_yaxes(type="log")
         iplot(self.fig_npv)
 
     # метод для отображения графика с оптимальной плотностью сетки
@@ -395,7 +395,7 @@ class ModelGenerator:
                 xaxis_title=x_axis,
                 yaxis_title=y_axis)
         colors = ['lightslategray',] * 6
-        colors[2] = 'crimson'
+        colors[1] = 'crimson'
         data = [go.Bar(
             x = model_list,
             y = npv_list,
@@ -407,9 +407,9 @@ class ModelGenerator:
 
     # методы расчета NPV для исследования скважин   
     def npv_method(self, df, l):
-        ci = 170*10**6 # руб, капитальные затраты на строительство скважины c поверхностным обустройством;
-        cap_l = 40000 # 3кк*73/3к=73к РУБ, стоимость 1 метра горизонтального ствола;
-        p = 4500 # 62*73*6,3=28500 # руб/м3, net-baсk цена нефти за вычетом НПДИ и подготовку нефти; 
+        ci =0# 170*10**6 # руб, капитальные затраты на строительство скважины c поверхностным обустройством;
+        cap_l = 73000 # 250000 РУБ, стоимость 1 метра горизонтального ствола;
+        p = 4000 # руб/м3, net-baсk цена нефти за вычетом НПДИ и подготовку нефти; 
         opex = 10**6 # руб/год, операционные затраты на скважину;
         r = 0.12 # ставка дисконтирования;
         to = df.index[0]
@@ -425,14 +425,16 @@ class ModelGenerator:
                 dcf = (q*p - opex)/(1 + r)**i
                 npv += dcf 
             j += 1
+            if i == 2:
+                return round(npv, 0)
 
         return round(npv, 0)
 
 
     def npv_plotn_method(self, df, l, A):
-        ci = 170*10**6 # руб, капитальные затраты на строительство скважины c поверхностным обустройством;
-        cap_l = 40000 # РУБ, стоимость 1 метра горизонтального ствола;
-        p = 15000 # руб/м3, net-baсk цена нефти за вычетом НПДИ и подготовку нефти; 
+        ci =0# 170*10**6 # руб, капитальные затраты на строительство скважины c поверхностным обустройством;
+        cap_l =  73000 #153000 # РУБ, стоимость 1 метра горизонтального ствола;
+        p = 4000 # 15000 руб/м3, net-baсk цена нефти за вычетом НПДИ и подготовку нефти; 
         opex = 10**6 # руб/год, операционные затраты на скважину;
         r = 0.12 # ставка дисконтирования;
         to = df.index[0]
@@ -448,6 +450,8 @@ class ModelGenerator:
                 dcf = (q*p - opex)/A/(1 + r)**i
                 npv += dcf 
             j += 1
+            if i == 2:
+                return round(npv, 0)
 
         return round(npv, 0)
 
