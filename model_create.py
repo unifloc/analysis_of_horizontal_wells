@@ -34,7 +34,7 @@ class ModelGenerator:
                  rezim='ORAT', prod_bhp=None, horizontal=False, y_stop=None, only_prod=False,
                  lgr=False, lx=None, ly=None, cells_cy=None, cells_v=None, cells_cx=None,
                  upr_rezim_water=False, upr_rezim_gas=False, rw=None, template=1, neogr=False,
-                 grp=False, nz_grp=1, xs_start_grp=1, xs_stop_grp=2, ys_grp=1, k_grp=100, roughness=False):
+                 grp=False, nz_grp=1, xs_start_grp=1, xs_stop_grp=2, ys_grp=1, k_grp=100, roughness=None):
         # продолжительность расчета
         self.start_date = f'{start_date}'
         self.tstep = f'{mounths}*{days}'
