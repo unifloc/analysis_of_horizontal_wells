@@ -45,6 +45,15 @@ class ModelGenerator:
         self.dy = f'{nx*ny*nz}*{dy} /'
         self.dz = f'{nx*ny*nz}*{dz}'
         if template == 2 or template == 4: 
+            if lgr == False:
+                self.dx = f'DX {dx} / \n'
+                self.dx = '/\n\n'
+                self.dx = 'BOX \n'
+                self.dx = f'1 {nx} 1 {ny} 1 {nz} /\n'
+                self.dy = f'DY {dx} / \n'
+                self.dy = '/\n\n'
+                self.dy = 'BOX \n'
+                self.dy = f'1 {nx} 1 {ny} 1 {nz} /\n'
             self.dz = f'DZ {dz} / \n'
             self.dz += '/'
         self.top_box = ''
