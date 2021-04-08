@@ -34,7 +34,7 @@ class ModelGenerator:
                  rezim='ORAT', prod_bhp=None, horizontal=False, y_stop=None, only_prod=False,
                  lgr=False, lx=None, ly=None, cells_cy=None, cells_v=None, cells_cx=None,
                  upr_rezim_water=False, upr_rezim_gas=False, rw=None, template=1, neogr=False,
-                 grp=False, nz_grp=1, xs_start_grp=1, xs_stop_grp=2, ys_grp=1, k_grp=100, roughness=None):
+                 grp=False, nz_grp=1, xs_start_grp=1, xs_stop_grp=2, ys_grp=1, k_grp=100, roughness=None, ecl_lgr=False):
         # продолжительность расчета
         self.start_date = f'{start_date}'
         self.tstep = f'{mounths}*{days}'
@@ -47,13 +47,13 @@ class ModelGenerator:
         if template == 2 or template == 4: 
             if lgr == False:
                 self.dx = f'DX {dx} / \n'
-                self.dx = '/\n\n'
-                self.dx = 'BOX \n'
-                self.dx = f'1 {nx} 1 {ny} 1 {nz} /\n'
+                self.dx += '/\n\n'
+                self.dx += 'BOX \n'
+                self.dx += f'1 {nx} 1 {ny} 1 {nz} /\n'
                 self.dy = f'DY {dx} / \n'
-                self.dy = '/\n\n'
-                self.dy = 'BOX \n'
-                self.dy = f'1 {nx} 1 {ny} 1 {nz} /\n'
+                self.dy += '/\n\n'
+                self.dy += 'BOX \n'
+                self.dy += f'1 {nx} 1 {ny} 1 {nz} /\n'
             self.dz = f'DZ {dz} / \n'
             self.dz += '/'
         self.top_box = ''
@@ -198,15 +198,15 @@ class ModelGenerator:
         for name, x, y, fluid in zip(all_well_names, all_well_xs,
                                              all_well_ys, all_well_fluid):
             if template == 2 or template == 4: name = f'"{name}"'
-            self.welspecs += name + ' G1 ' + str(x) + ' ' + str(y) + ' 1* ' + fluid + ' /\n'
+            self.welspecs += name + ' G1 N1 ' + str(x) + ' ' + str(y) + ' 1* ' + fluid + ' /\n'
 
         for x, name, y, z1, z2, skin, rw in zip(all_well_xs, all_well_names, all_well_ys,
                                               all_well_z1s, all_well_z2s, skin, rw):
             if template == 2 or template == 4: name = f'"{name}"'
             if horizontal:
-                self.compdat = name + ' ' + str(x) + ' ' + str(y) + ' ' + str(z2) + ' ' + str(z2) + ' OPEN	1*	1* ' + str(rw) +  ' 1* ' + str(skin) + ' 1* Y /\n' 
+                self.compdat = name + ' N1 ' + str(x) + ' ' + str(y) + ' ' + str(z2) + ' ' + str(z2) + ' OPEN	1*	1* ' + str(rw) +  ' 1* ' + str(skin) + ' 1* Y /\n' 
                 for i in range(y+1, y_stop[0]+1):
-                    self.compdat += name + ' ' + str(x) + ' ' + str(i) + ' ' + str(z2) + ' ' + str(z2) + ' OPEN	1*	1* ' + str(rw) +  ' 1* ' + str(skin) + ' 1* Y /\n'
+                    self.compdat += name + ' N1 ' + str(x) + ' ' + str(i) + ' ' + str(z2) + ' ' + str(z2) + ' OPEN	1*	1* ' + str(rw) +  ' 1* ' + str(skin) + ' 1* Y /\n'
             else:
                 for i in range(0, len(all_well_xs)):
                     self.compdat += name + ' ' + str(all_well_xs[i]) + ' ' + str(all_well_ys[i]) + ' ' + str(all_well_z1s[i]) + ' ' + str(all_well_z2s[i]) + ' OPEN	1*	1*	' + str(rw) +  ' 1* ' + str(skin) + ' /\n'
@@ -265,7 +265,7 @@ class ModelGenerator:
         if self.template == 1:
             template_name = 'templates/opm.DATA'
         elif self.template == 2:
-            template_name = 'templates/ecl.DATA'
+            template_name = 'templates/ecl2.DATA'
         elif self.template == 3:
             template_name = 'templates/opm_multphase.DATA'
         elif self.template == 4:

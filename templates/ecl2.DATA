@@ -1,0 +1,376 @@
+---------------------------------------------------------------------------
+-------------------------- RIENM Corporation ------------------------------
+---------------------------------------------------------------------------
+
+RUNSPEC
+-- -------------------------------------------------------------------------
+
+TITLE
+   RIENM_CORP - CASE 1
+
+DIMENS
+   {{ DIMENS }} /
+
+EQLDIMS
+1 /
+
+TABDIMS
+-- NoSatTabl        MaxNodesSatTab             MaxFIPReg            MaxSatEndpointsDepthTab
+--          NoPVTTab              MaxPressNodes         MaxRsRvNodes
+      1         1        100           100         1         100           /
+
+OIL
+WATER
+
+
+METRIC
+
+START
+	{{ START }} /
+
+WELLDIMS
+-- Item 1: maximum number of wells in the model
+-- Item 2: maximum number of grid blocks connected to any one well
+-- Item 3: maximum number of groups in the model
+-- Item 4: maximum number of wells in any one group
+   50 1000 5 10 /
+
+LGR
+--MAXLGR MAXCLS MCOARS MAMALG MXLALG LSTACK Pressure NCHCOR
+-- Interpolation
+ 2 40000 40000 10 20 /
+
+UNIFOUT
+
+GRID
+
+INIT
+
+
+-- -------------------------------------------------------------------------
+NOECHO
+
+EQUALS 
+{{ DX }}
+
+EQUALS 
+{{ DY }}
+
+EQUALS 
+{{ DZ }} 
+
+{{ TOP_BOX }}
+
+TOPS
+{{ TOPS }} /
+
+{{ PORO_BOX }}
+
+PORO
+{{ PORO }} /
+
+CARFIN
+--I1 I2 J1 J2 K1 K2 NX NY NY
+   N1 20 21 17 24 1 10 14 32 10 /
+ENDFIN
+
+EQUALS 
+{{ PERMX }} /
+
+EQUALS 
+{{ PERMY }} /
+
+EQUALS 
+{{ PERMZ }} /
+
+
+ECHO
+
+PROPS
+-- -------------------------------------------------------------------------
+
+SWOF
+-- Column 1: water saturation
+-- Column 2: water relative permeability
+-- Column 3: oil relative permeability when only oil and water are present
+-- Column 4: water-oil capillary pressure 
+             0           0           1           1.6
+          0.12           0           1           1.5
+         0.121           0           1           1.5
+          0.14           0       0.997           1.5
+          0.17           0        0.98           1.5
+          0.24           0.0001         0.7           0.8
+          0.32           0.011        0.35           0.3
+          0.37           0.030         0.2           0.2
+          0.42           0.049        0.09           0.1
+          0.52           0.125       0.021           0
+          0.57           0.192        0.01           0
+          0.62           0.246       0.001           0
+          0.72           0.420      0.0001           0
+          0.82           0.640           0           0
+             1      	    1           0           0
+/
+
+
+DENSITY
+-- Oil   Water   Gas
+{{ DENSITY }}
+
+PVDO
+--  Press    Bo       Muo
+		80		1.22		0.51
+		230		1.21		0.52
+		450		1.20		0.53
+/
+
+PVTW
+-- Pref       Bw          Comp       Muw
+	230     1.026 4.68E-005      0.29    /
+
+ROCK
+-- Item 1: reference pressure 
+-- Item 2: rock compressibility 
+   {{ ROCK }}
+/
+
+
+SOLUTION
+-- -------------------------------------------------------------------------
+
+EQUIL
+-- Item 1: datum depth
+-- Item 2: pressure at datum depth 
+-- Item 3: depth of water-oil contact
+-- Item 4: oil-water capillary pressure at the water oil contact 
+-- Item 5: depth of gas-oil contact
+-- Item 6: gas-oil capillary pressure at gas-oil contact
+-- Item 7: RSVD-table
+-- Item 8: RVVD-table
+-- Item 9: Set to 0 as this is the only value supported by OPM
+ {{ EQUIL }}
+
+   
+RPTSOL
+RESTART=2 FIP=2 'PRES' 'SWAT' /
+
+RPTRST
+'ALLPROPS' /
+
+SUMMARY
+-- -------------------------------------------------------------------------
+WOPR
+/
+WOPT
+/
+WWPR
+/
+WWPT
+/
+WLPR
+/
+WLPT
+/
+WWIR
+/
+WWIT
+/
+WGPR
+/
+WGPT
+/
+WWCT
+/
+WGOR
+/
+WBHP
+/
+WBP9
+/
+WBP
+/
+WTHP
+/
+
+WOPRH
+/
+WOPTH
+/
+WWPRH
+/
+WWPTH
+/
+WLPRH
+/
+WLPTH
+/
+WWIRH
+/
+WWITH
+/
+WGPRH
+/
+WGPTH
+/
+WWCTH
+/
+WGORH
+/
+WBHPH
+/
+WTHPH
+/
+
+FOPR
+FWPR
+FLPR
+FWIR
+FGPR
+
+FOPT
+FWPT
+FLPT
+FWIT
+FGPT
+
+FPR
+FWCT
+FGOR
+
+FMWPR
+FMWIN
+
+FOPRH
+FWPRH
+FLPRH
+FWIRH
+FGPRH
+
+FOPTH
+FWPTH
+FLPTH
+FWITH
+FGPTH
+
+FWCTH
+FGORH
+
+ROPR
+/
+RWPR
+/
+RWIR
+/
+RGPR
+/
+ROPT
+/
+RWPT
+/
+RWIT
+/
+RGPT
+/
+RPR
+/
+ROFT
+/
+ROFTL
+/
+ROFTG
+/
+
+GOPR
+/
+GOPT
+/
+GWPR
+/
+GWPT
+/
+GGPR
+/
+GGPT
+/
+GLPR
+/
+GLPT
+/
+GWIR
+/
+GWIT
+/
+GMWPR
+/
+GMWIN
+/
+
+FAQR
+
+DATE
+
+RUNSUM
+
+SEPARATE
+
+RPTONLY
+
+RPTSMRY
+1 /
+
+MONITOR
+
+EXCEL
+
+
+
+SCHEDULE
+-- -------------------------------------------------------------------------
+RPTSCHED
+	'PRES' 'SGAS' 'RS' 'WELLS' /
+
+RPTRST
+'BASIC=2' 'FREQ=1' /
+
+TUNING
+0.001 0.5 0.001 6* 1 /
+/
+1* 1* 50  1*  1* 4* /
+
+MATCORR
+/
+
+-- If no resolution (i.e. case 1). the two following lines must be added:
+DRSDT
+ 0 /
+-- if DRSDT is set to 0, GOR cannot rise and free gas does not
+-- dissolve in undersaturated oil -> constant bubble point pressure
+
+WELSPECL
+-- Item #: 1	 2	3	4	5	 6
+{{ WELSPECS }}
+/
+
+
+COMPDATL
+-- Item #: 1	2	3	4	5	6	7	8	9
+{{ COMPDAT }}
+/
+
+
+
+WCONPROD
+-- Item #:1	2      3     4	   5  9
+{{ WCONPROD }}
+/
+
+
+WCONINJE
+-- Item #:1	 2	 3	 4	5      6  7
+{{ WCONINJE }}/
+
+
+TSTEP
+{{ TSTEP }} /
+
+
+END
